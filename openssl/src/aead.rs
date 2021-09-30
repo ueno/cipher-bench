@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-#![allow(dead_code)]
-
-include!(concat!(env!("OUT_DIR"), "/aead.rs"));
-
+use crate::evp;
 use cipher_bench::{Aead, AeadBuilder};
-use std::mem;
+use std::os::raw::c_int;
+use std::ptr;
 
 pub struct GcmAes128CtxBuilder {
     iv: Option<Vec<u8>>,
@@ -19,12 +14,19 @@ impl GcmAes128CtxBuilder {
         Self { iv: None }
     }
 
-    fn build(&mut self, key: &[u8]) -> Box<dyn Aead> {
+    fn build(&mut self, key: &[u8], for_encryption: bool) -> Box<dyn Aead> {
         let ctx = unsafe {
-            let mut ctx: gcm_aes128_ctx = mem::zeroed();
-            nettle_gcm_aes128_set_key(&mut ctx, key.as_ptr() as _);
+            let ctx: *mut evp::EVP_CIPHER_CTX = evp::EVP_CIPHER_CTX_new();
+            let cipher = evp::EVP_aes_128_gcm();
             let iv = self.iv.take().unwrap();
-            nettle_gcm_aes128_set_iv(&mut ctx, iv.len() as _, iv.as_ptr() as _);
+            let _ = evp::EVP_CipherInit_ex(
+                ctx,
+                cipher,
+                ptr::null_mut::<evp::ENGINE>(),
+                key.as_ptr() as _,
+                iv.as_ptr() as _,
+                for_encryption as _,
+            );
             ctx
         };
         Box::new(GcmAes128Ctx { ctx })
@@ -38,37 +40,41 @@ impl AeadBuilder for GcmAes128CtxBuilder {
     }
 
     fn for_encryption(&mut self, key: &[u8]) -> Box<dyn Aead> {
-        self.build(key)
+        self.build(key, true)
     }
 
     fn for_decryption(&mut self, key: &[u8]) -> Box<dyn Aead> {
-        self.build(key)
+        self.build(key, false)
     }
 }
 
 pub struct GcmAes128Ctx {
-    ctx: gcm_aes128_ctx,
+    ctx: *mut evp::EVP_CIPHER_CTX,
 }
 
 impl Aead for GcmAes128Ctx {
     fn encrypt(&mut self, ptext: &[u8], ctext: &mut [u8]) {
+        let mut outl = ctext.len() as c_int;
         unsafe {
-            nettle_gcm_aes128_encrypt(
-                &mut self.ctx as *mut gcm_aes128_ctx,
-                ctext.len() as _,
+            evp::EVP_EncryptUpdate(
+                self.ctx,
                 ctext.as_mut_ptr() as *mut _,
+                &mut outl,
                 ptext.as_ptr() as _,
+                ptext.len() as _,
             );
         }
     }
 
     fn decrypt(&mut self, ctext: &[u8], ptext: &mut [u8]) {
+        let mut outl = ptext.len() as c_int;
         unsafe {
-            nettle_gcm_aes128_decrypt(
-                &mut self.ctx as *mut gcm_aes128_ctx,
-                ptext.len() as _,
+            evp::EVP_DecryptUpdate(
+                self.ctx,
                 ptext.as_mut_ptr() as *mut _,
+                &mut outl,
                 ctext.as_ptr() as _,
+                ctext.len() as _,
             );
         }
     }

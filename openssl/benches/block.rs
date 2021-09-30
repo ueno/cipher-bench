@@ -2,12 +2,12 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 
-use cipher_bench::{bench_aead, AeadAlgorithm};
-use nettle::GcmAes128CtxBuilder;
+use cipher_bench::{bench_block, BlockCipherAlgorithm};
+use openssl::CbcAes128CtxBuilder;
 use std::convert::TryInto;
 
-pub fn aeads(c: &mut Criterion) {
-    let mut group = c.benchmark_group("nettle/aeads");
+pub fn block_ciphers(c: &mut Criterion) {
+    let mut group = c.benchmark_group("nettle/block-ciphers");
     let parameters: Vec<usize> = (1..=cipher_bench::ITER).collect();
 
     for i in parameters {
@@ -15,12 +15,12 @@ pub fn aeads(c: &mut Criterion) {
             (i * cipher_bench::STEP).try_into().unwrap(),
         ));
 
-        let builder = GcmAes128CtxBuilder::new();
-        bench_aead(&mut group, AeadAlgorithm::GcmAes128, builder, i);
+        let builder = CbcAes128CtxBuilder::new();
+        bench_block(&mut group, BlockCipherAlgorithm::CbcAes128, builder, i);
     }
 
     group.finish();
 }
 
-criterion_group!(benches, aeads);
+criterion_group!(benches, block_ciphers);
 criterion_main!(benches);

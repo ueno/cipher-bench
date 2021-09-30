@@ -31,7 +31,8 @@ pub trait Aead {
 
 pub trait AeadBuilder {
     fn nonce(&mut self, nonce: &[u8]) -> &mut Self;
-    fn build(&mut self, key: &[u8]) -> Box<dyn Aead>;
+    fn for_encryption(&mut self, key: &[u8]) -> Box<dyn Aead>;
+    fn for_decryption(&mut self, key: &[u8]) -> Box<dyn Aead>;
 }
 
 pub fn bench_aead<B, M>(
@@ -60,9 +61,7 @@ pub fn bench_aead<B, M>(
             let mut nonce_bytes = vec![0u8; algorithm.nonce_len()];
             rng.fill(nonce_bytes.as_mut_slice());
 
-            let mut ctx = builder
-                .nonce(&nonce_bytes)
-                .build(&key_bytes);
+            let mut ctx = builder.nonce(&nonce_bytes).for_encryption(&key_bytes);
 
             let pbuf = vec![0u8; *param];
             let mut cbuf = vec![0u8; *param];
@@ -70,5 +69,6 @@ pub fn bench_aead<B, M>(
             b.iter(|| {
                 ctx.encrypt(black_box(&pbuf), black_box(&mut cbuf));
             });
-        });
+        },
+    );
 }

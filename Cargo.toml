@@ -3,4 +3,5 @@
 members = [
 	"cipher_bench",
 	"nettle",
+	"openssl",
 ]

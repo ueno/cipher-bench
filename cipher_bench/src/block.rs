@@ -61,9 +61,7 @@ pub fn bench_block<B, M>(
             let mut nonce_bytes = vec![0u8; algorithm.nonce_len()];
             rng.fill(nonce_bytes.as_mut_slice());
 
-            let mut ctx = builder
-                .nonce(&nonce_bytes)
-                .for_encryption(&key_bytes);
+            let mut ctx = builder.nonce(&nonce_bytes).for_encryption(&key_bytes);
 
             let pbuf = vec![0u8; *param];
             let mut cbuf = vec![0u8; *param];
@@ -71,5 +69,6 @@ pub fn bench_block<B, M>(
             b.iter(|| {
                 ctx.encrypt(black_box(&pbuf), black_box(&mut cbuf));
             });
-        });
+        },
+    );
 }

@@ -7,7 +7,7 @@ use nettle::CbcAes128CtxBuilder;
 use std::convert::TryInto;
 
 pub fn block_ciphers(c: &mut Criterion) {
-    let mut group = c.benchmark_group("block-ciphers");
+    let mut group = c.benchmark_group("nettle/block-ciphers");
     let parameters: Vec<usize> = (1..=cipher_bench::ITER).collect();
 
     for i in parameters {
