@@ -10,11 +10,11 @@ include!(concat!(env!("OUT_DIR"), "/aead.rs"));
 use cipher_bench::{Aead, AeadBuilder};
 use std::mem;
 
-pub struct GcmAes128CtxBuilder {
+pub struct Aes128GcmCtxBuilder {
     iv: Option<Vec<u8>>,
 }
 
-impl GcmAes128CtxBuilder {
+impl Aes128GcmCtxBuilder {
     pub fn new() -> Self {
         Self { iv: None }
     }
@@ -27,11 +27,11 @@ impl GcmAes128CtxBuilder {
             nettle_gcm_aes128_set_iv(&mut ctx, iv.len() as _, iv.as_ptr() as _);
             ctx
         };
-        Box::new(GcmAes128Ctx { ctx })
+        Box::new(Aes128GcmCtx { ctx })
     }
 }
 
-impl AeadBuilder for GcmAes128CtxBuilder {
+impl AeadBuilder for Aes128GcmCtxBuilder {
     fn nonce(&mut self, iv: &[u8]) -> &mut Self {
         self.iv.replace(iv.to_vec());
         self
@@ -46,11 +46,11 @@ impl AeadBuilder for GcmAes128CtxBuilder {
     }
 }
 
-pub struct GcmAes128Ctx {
+pub struct Aes128GcmCtx {
     ctx: gcm_aes128_ctx,
 }
 
-impl Aead for GcmAes128Ctx {
+impl Aead for Aes128GcmCtx {
     fn encrypt(&mut self, ptext: &[u8], ctext: &mut [u8]) {
         unsafe {
             nettle_gcm_aes128_encrypt(
@@ -85,10 +85,10 @@ mod tests {
     fn roundtrip() {
         let mut rng = rand::thread_rng();
 
-        let mut key_bytes = vec![0u8; AeadAlgorithm::GcmAes128.key_len()];
+        let mut key_bytes = vec![0u8; AeadAlgorithm::Aes128Gcm.key_len()];
         rng.fill(key_bytes.as_mut_slice());
 
-        let mut nonce_bytes = vec![0u8; AeadAlgorithm::GcmAes128.nonce_len()];
+        let mut nonce_bytes = vec![0u8; AeadAlgorithm::Aes128Gcm.nonce_len()];
         rng.fill(nonce_bytes.as_mut_slice());
 
         let mut data_bytes = vec![0u8; 1024];
@@ -98,7 +98,7 @@ mod tests {
         ptext.copy_from_slice(data_bytes.as_slice());
         let mut ctext = vec![0u8; 1024];
 
-        let mut builder = GcmAes128CtxBuilder::new();
+        let mut builder = Aes128GcmCtxBuilder::new();
 
         let mut ctx = builder.nonce(&nonce_bytes).for_encryption(&key_bytes);
         ctx.encrypt(&ptext, &mut ctext);

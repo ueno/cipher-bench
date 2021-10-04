@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
 pub enum BlockCipherAlgorithm {
-    CbcAes128,
+    Aes128Cbc,
 }
 
 impl BlockCipherAlgorithm {
     pub fn name(&self) -> &str {
         match self {
-            BlockCipherAlgorithm::CbcAes128 => "aes-128-cbc",
+            BlockCipherAlgorithm::Aes128Cbc => "aes-128-cbc",
         }
     }
 
     pub fn key_len(&self) -> usize {
         match self {
-            BlockCipherAlgorithm::CbcAes128 => 16,
+            BlockCipherAlgorithm::Aes128Cbc => 16,
         }
     }
 
     pub fn nonce_len(&self) -> usize {
         match self {
-            BlockCipherAlgorithm::CbcAes128 => 16,
+            BlockCipherAlgorithm::Aes128Cbc => 16,
         }
     }
 }

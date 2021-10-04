@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
 pub enum AeadAlgorithm {
-    GcmAes128,
+    Aes128Gcm,
 }
 
 impl AeadAlgorithm {
     pub fn name(&self) -> &str {
         match self {
-            AeadAlgorithm::GcmAes128 => "aes-128-gcm",
+            AeadAlgorithm::Aes128Gcm => "aes-128-gcm",
         }
     }
 
     pub fn key_len(&self) -> usize {
         match self {
-            AeadAlgorithm::GcmAes128 => 16,
+            AeadAlgorithm::Aes128Gcm => 16,
         }
     }
 
     pub fn nonce_len(&self) -> usize {
         match self {
-            AeadAlgorithm::GcmAes128 => 12,
+            AeadAlgorithm::Aes128Gcm => 12,
         }
     }
 }

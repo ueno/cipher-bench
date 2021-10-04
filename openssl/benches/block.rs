@@ -3,7 +3,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 
 use cipher_bench::{bench_block, BlockCipherAlgorithm};
-use openssl::CbcAes128CtxBuilder;
+use openssl::Aes128CbcCtxBuilder;
 use std::convert::TryInto;
 
 pub fn block_ciphers(c: &mut Criterion) {
@@ -15,8 +15,8 @@ pub fn block_ciphers(c: &mut Criterion) {
             (i * cipher_bench::STEP).try_into().unwrap(),
         ));
 
-        let builder = CbcAes128CtxBuilder::new();
-        bench_block(&mut group, BlockCipherAlgorithm::CbcAes128, builder, i);
+        let builder = Aes128CbcCtxBuilder::new();
+        bench_block(&mut group, BlockCipherAlgorithm::Aes128Cbc, builder, i);
     }
 
     group.finish();

@@ -11,17 +11,17 @@ use cipher_bench::{BlockCipher, BlockCipherBuilder};
 use std::mem;
 use std::os::raw::c_void;
 
-pub struct CbcAes128CtxBuilder {
+pub struct Aes128CbcCtxBuilder {
     iv: Option<Vec<u8>>,
 }
 
-impl CbcAes128CtxBuilder {
+impl Aes128CbcCtxBuilder {
     pub fn new() -> Self {
         Self { iv: None }
     }
 }
 
-impl BlockCipherBuilder for CbcAes128CtxBuilder {
+impl BlockCipherBuilder for Aes128CbcCtxBuilder {
     fn nonce(&mut self, iv: &[u8]) -> &mut Self {
         self.iv.replace(iv.to_vec());
         self
@@ -33,7 +33,7 @@ impl BlockCipherBuilder for CbcAes128CtxBuilder {
             nettle_aes128_set_encrypt_key(&mut ctx, key.as_ptr() as _);
             ctx
         };
-        Box::new(CbcAes128Ctx {
+        Box::new(Aes128CbcCtx {
             ctx,
             iv: self.iv.take().unwrap(),
         })
@@ -45,19 +45,19 @@ impl BlockCipherBuilder for CbcAes128CtxBuilder {
             nettle_aes128_set_decrypt_key(&mut ctx, key.as_ptr() as _);
             ctx
         };
-        Box::new(CbcAes128Ctx {
+        Box::new(Aes128CbcCtx {
             ctx,
             iv: self.iv.take().unwrap(),
         })
     }
 }
 
-pub struct CbcAes128Ctx {
+pub struct Aes128CbcCtx {
     ctx: aes128_ctx,
     iv: Vec<u8>,
 }
 
-impl BlockCipher for CbcAes128Ctx {
+impl BlockCipher for Aes128CbcCtx {
     fn encrypt(&mut self, ptext: &[u8], ctext: &mut [u8]) {
         unsafe {
             let encrypt: extern "C" fn(*const c_void, u64, *mut u8, *const u8) =
@@ -104,10 +104,10 @@ mod tests {
     fn roundtrip() {
         let mut rng = rand::thread_rng();
 
-        let mut key_bytes = vec![0u8; BlockCipherAlgorithm::CbcAes128.key_len()];
+        let mut key_bytes = vec![0u8; BlockCipherAlgorithm::Aes128Cbc.key_len()];
         rng.fill(key_bytes.as_mut_slice());
 
-        let mut nonce_bytes = vec![0u8; BlockCipherAlgorithm::CbcAes128.nonce_len()];
+        let mut nonce_bytes = vec![0u8; BlockCipherAlgorithm::Aes128Cbc.nonce_len()];
         rng.fill(nonce_bytes.as_mut_slice());
 
         let mut data_bytes = vec![0u8; 1024];
@@ -117,7 +117,7 @@ mod tests {
         ptext.copy_from_slice(data_bytes.as_slice());
         let mut ctext = vec![0u8; 1024];
 
-        let mut builder = CbcAes128CtxBuilder::new();
+        let mut builder = Aes128CbcCtxBuilder::new();
 
         let mut ctx = builder.nonce(&nonce_bytes).for_encryption(&key_bytes);
         ctx.encrypt(&ptext, &mut ctext);
